@@ -8,12 +8,7 @@ const Navbar: React.FC = () => {
     setIsMenuOpen(false);
     const element = document.getElementById(id);
     if (element) {
-      const offset = 80;
-      const bodyRect = document.body.getBoundingClientRect().top;
-      const elementRect = element.getBoundingClientRect().top;
-      const elementPosition = elementRect - bodyRect;
-      const offsetPosition = elementPosition - offset;
-      window.scrollTo({ top: offsetPosition, behavior: 'smooth' });
+      element.scrollIntoView({ behavior: 'smooth' });
     }
   };
 
@@ -31,7 +26,6 @@ const Navbar: React.FC = () => {
           <button onClick={() => scrollToSection('about')} className="hover:text-white transition-colors">Sobre</button>
           <button onClick={() => scrollToSection('services')} className="hover:text-white transition-colors">Serviços</button>
           <button onClick={() => scrollToSection('work')} className="hover:text-white transition-colors">Trabalhos</button>
-          <button onClick={() => scrollToSection('pricing')} className="hover:text-white transition-colors">Valores</button>
           <button onClick={() => scrollToSection('contact')} className="hover:text-white transition-colors">Contato</button>
         </div>
 
@@ -66,7 +60,6 @@ const Navbar: React.FC = () => {
           <button onClick={() => scrollToSection('about')} className="text-xs font-black uppercase tracking-[0.3em] text-gray-400">Sobre</button>
           <button onClick={() => scrollToSection('services')} className="text-xs font-black uppercase tracking-[0.3em] text-gray-400">Serviços</button>
           <button onClick={() => scrollToSection('work')} className="text-xs font-black uppercase tracking-[0.3em] text-gray-400">Trabalhos</button>
-          <button onClick={() => scrollToSection('pricing')} className="text-xs font-black uppercase tracking-[0.3em] text-gray-400">Valores</button>
           <button onClick={() => scrollToSection('contact')} className="text-xs font-black uppercase tracking-[0.3em] text-gray-400">Contato</button>
           <button 
             onClick={() => scrollToSection('pricing')}

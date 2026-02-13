@@ -26,6 +26,13 @@
         .text-glow-blue { text-shadow: 0 0 15px var(--blue-glow); }
         .text-glow-rose { text-shadow: 0 0 15px var(--rose-glow); }
         
+        .bg-mesh {
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(59, 130, 246, 0.12) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(225, 29, 72, 0.12) 0px, transparent 50%);
+            background-attachment: fixed;
+        }
+
         @keyframes float {
             0%, 100% { transform: translateY(0px) rotate(0deg); }
             50% { transform: translateY(-20px) rotate(2deg); }
@@ -48,20 +55,364 @@
 
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        .pricing-tab-active {
+            background: white;
+            color: black;
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
+        }
+
+        .modal-blur {
+            backdrop-filter: blur(20px);
+            background-color: rgba(0, 0, 0, 0.9);
+        }
     </style>
-    <script type="importmap">
-    {
-      "imports": {
-        "react": "https://esm.sh/react@^19.2.4",
-        "react-dom/": "https://esm.sh/react-dom@^19.2.4/",
-        "react/": "https://esm.sh/react@^19.2.4/",
-        "@google/genai": "https://esm.sh/@google/genai@^1.41.0"
-      }
-    }
-    </script>
+<script type="importmap">
+{
+  "imports": {
+    "react": "https://esm.sh/react@^19.2.4",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.4/",
+    "react/": "https://esm.sh/react@^19.2.4/",
+    "@google/genai": "https://esm.sh/@google/genai@^1.41.0"
+  }
+}
+</script>
 </head>
-<body>
-    <div id="root"></div>
-    <script type="module" src="index.tsx"></script>
+<body class="bg-mesh">
+
+    <!-- Navegação -->
+    <nav class="fixed top-0 left-0 w-full z-50 bg-black/80 backdrop-blur-lg border-b border-white/10">
+        <div class="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
+            <div class="text-xl md:text-2xl font-extrabold tracking-tighter cursor-pointer" onclick="window.scrollTo({top:0, behavior:'smooth'})">
+                <span class="text-blue-500">ENZO</span>
+                <span class="text-rose-500">BRASSANINI</span>
+            </div>
+            
+            <!-- Menu Desktop -->
+            <div class="hidden lg:flex gap-8 text-[10px] font-black uppercase tracking-widest text-gray-400">
+                <a href="#home" class="hover:text-white transition-colors">Início</a>
+                <a href="#about" class="hover:text-white transition-colors">Sobre</a>
+                <a href="#services" class="hover:text-white transition-colors">Serviços</a>
+                <a href="#work" class="hover:text-white transition-colors">Trabalhos</a>
+                <a href="#pricing" class="hover:text-white transition-colors">Valores</a>
+                <a href="#contact" class="hover:text-white transition-colors">Contato</a>
+            </div>
+
+            <button onclick="openContactModal()" class="hidden sm:block px-6 py-2.5 bg-gradient-to-r from-blue-600 to-rose-600 rounded-full text-[10px] font-black hover:scale-105 transition-transform text-white shadow-lg shadow-blue-900/20 uppercase tracking-widest">
+                ORÇAMENTO
+            </button>
+
+            <!-- Mobile Toggle -->
+            <button class="lg:hidden p-2 text-white" onclick="toggleMenu()">
+                <svg id="menu-icon" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7" />
+                </svg>
+            </button>
+        </div>
+
+        <!-- Menu Mobile Overlay -->
+        <div id="mobile-menu" class="hidden lg:hidden absolute top-20 left-0 w-full bg-[#050505] border-b border-white/10 flex-col p-8 gap-6 text-center animate-in fade-in slide-in-from-top-4">
+            <a href="#home" onclick="toggleMenu()" class="text-xs font-black uppercase tracking-[0.3em] text-gray-400">Início</a>
+            <a href="#about" onclick="toggleMenu()" class="text-xs font-black uppercase tracking-[0.3em] text-gray-400">Sobre</a>
+            <a href="#services" onclick="toggleMenu()" class="text-xs font-black uppercase tracking-[0.3em] text-gray-400">Serviços</a>
+            <a href="#work" onclick="toggleMenu()" class="text-xs font-black uppercase tracking-[0.3em] text-gray-400">Trabalhos</a>
+            <a href="#pricing" onclick="toggleMenu()" class="text-xs font-black uppercase tracking-[0.3em] text-gray-400">Valores</a>
+            <a href="#contact" onclick="toggleMenu()" class="text-xs font-black uppercase tracking-[0.3em] text-gray-400">Contato</a>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section id="home" class="relative min-h-screen flex items-center justify-center pt-24 pb-20 px-6 overflow-hidden">
+        <div class="absolute top-1/4 -left-20 w-[300px] md:w-[600px] h-[300px] md:h-[600px] bg-blue-600/10 rounded-full blur-[100px] animate-pulse"></div>
+        
+        <div class="relative z-10 flex flex-col lg:flex-row items-center justify-between gap-12 lg:gap-16 max-w-7xl mx-auto w-full">
+            <div class="flex-1 text-center lg:text-left order-2 lg:order-1">
+                <div class="inline-flex items-center gap-3 px-4 py-2 rounded-full bg-white/5 border border-white/10 mb-8 backdrop-blur-sm">
+                    <span class="relative flex h-2 w-2">
+                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
+                    </span>
+                    <span class="text-[9px] md:text-xs font-black tracking-[0.2em] uppercase text-blue-400">Editor High-End & Thumbnail Strategist</span>
+                </div>
+                
+                <h1 class="text-4xl md:text-7xl lg:text-8xl font-black mb-8 tracking-tighter leading-[1.1]">
+                    SEU CONTEÚDO <br> 
+                    <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-500 via-white to-rose-500 text-glow-blue">
+                        COM RETENÇÃO
+                    </span>
+                </h1>
+                
+                <p class="text-gray-400 text-base md:text-xl mb-12 max-w-2xl mx-auto lg:mx-0 leading-relaxed font-light">
+                    Especialista em storytelling visual e psicologia de retenção. <br class="hidden md:block">
+                    Transformo vídeos comuns em <span class="text-white font-semibold">experiências cinematográficas</span> que dominam a atenção.
+                </p>
+                
+                <div class="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
+                    <a href="#work" class="px-8 py-4 bg-white text-black font-black rounded-2xl hover:bg-blue-600 hover:text-white transition-all text-[10px] uppercase tracking-widest shadow-2xl">Ver Portfólio</a>
+                    <a href="#pricing" class="px-8 py-4 bg-transparent border border-white/10 text-white font-black rounded-2xl hover:bg-white/5 transition-all text-[10px] uppercase tracking-widest backdrop-blur-sm">Ver Valores</a>
+                </div>
+            </div>
+
+            <div class="flex-1 relative flex justify-center items-center order-1 lg:order-2">
+                <div class="relative z-10 w-64 h-64 md:w-80 md:h-80 lg:w-[420px] lg:h-[420px] animate-float">
+                    <div class="absolute inset-0 border-2 border-white/10 rounded-[3rem] -rotate-6 scale-105"></div>
+                    <div class="relative w-full h-full overflow-hidden rounded-[3rem] border border-white/20 bg-[#080808] shadow-2xl">
+                        <img src="https://i.postimg.cc/Qxf21tFh/perfil-vendas.png" alt="Enzo Brassanini" class="w-full h-full object-cover">
+                    </div>
+                    <div class="absolute -bottom-8 left-1/2 -translate-x-1/2 w-[110%] bg-black/80 backdrop-blur-2xl border border-white/10 px-8 py-4 rounded-2xl shadow-2xl text-center">
+                        <span class="block text-[10px] text-blue-400 font-black tracking-[0.3em] uppercase mb-1">Creative Video Editor</span>
+                        <h2 class="text-xl md:text-2xl font-black tracking-tighter">ENZO <span class="text-rose-500">BRASSANINI</span></h2>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Seção Sobre -->
+    <section id="about" class="py-32 px-6 relative">
+        <div class="max-w-7xl mx-auto flex flex-col lg:flex-row items-start gap-16">
+            <div class="flex-1">
+                <div class="inline-flex items-center gap-4 px-6 py-3 rounded-full bg-white/5 border border-white/10 mb-10">
+                    <span class="text-xs font-black uppercase tracking-[0.3em] text-white">Quem é <span class="text-blue-400">Enzo</span>?</span>
+                </div>
+                <h2 class="text-4xl md:text-6xl font-black mb-10 tracking-tight leading-tight">
+                    DOMINANDO O CLIQUE E A <br>
+                    <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-500 to-rose-500">RETENÇÃO DE ELITE</span>
+                </h2>
+                <div class="space-y-6 text-gray-400 text-lg font-light leading-relaxed mb-12">
+                    <p>Meu nome é <span class="text-white font-bold">Enzo Leonardo Brassanini</span>. O que começou há 3 anos como curiosidade técnica, evoluiu para uma obsessão por resultados no YouTube.</p>
+                    <p>Decidi entrar no mercado profissional como <span class="text-white font-bold">Editor e Thumbmaker</span> para aplicar estratégias de psicologia visual e ritmo de corte refinados em milhares de horas de trabalho.</p>
+                </div>
+
+                <!-- Arsenal Técnico -->
+                <button onclick="toggleArsenal()" class="flex items-center gap-4 px-8 py-5 bg-white/5 border border-white/10 rounded-2xl hover:bg-white/10 transition-all w-full md:w-auto mb-8">
+                    <span class="text-xs font-black uppercase tracking-[0.2em]">Ver Arsenal Técnico</span>
+                    <svg id="arsenal-arrow" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-blue-500 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M19 9l-7 7-7-7" /></svg>
+                </button>
+
+                <div id="arsenal-grid" class="hidden grid grid-cols-1 md:grid-cols-2 gap-4 animate-in slide-in-from-top-4">
+                    <div class="p-6 bg-black/40 border border-blue-500/20 rounded-2xl"><h4 class="text-blue-400 font-black uppercase text-xs mb-2">Motion 2D/3D</h4><p class="text-xs text-gray-500">Animações complexas que elevam o valor de produção.</p></div>
+                    <div class="p-6 bg-black/40 border border-rose-500/20 rounded-2xl"><h4 class="text-rose-400 font-black uppercase text-xs mb-2">Design de Thumbs</h4><p class="text-xs text-gray-500">Focado em CTR e psicologia das cores.</p></div>
+                </div>
+            </div>
+            
+            <div class="flex-1 relative hidden lg:block">
+                <div class="rounded-[3rem] overflow-hidden border border-white/10 bg-[#0a0a0a] aspect-square shadow-2xl">
+                    <img src="https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&q=80&w=800" class="w-full h-full object-cover opacity-40" alt="Studio">
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Serviços -->
+    <section id="services" class="py-24 bg-black/40 border-y border-white/5 relative">
+        <div class="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-3 gap-12 text-center">
+            <div class="p-8 rounded-2xl bg-white/5 border border-white/5 hover:border-blue-500/30 transition-all">
+                <div class="w-16 h-16 bg-blue-600/20 text-blue-500 rounded-2xl flex items-center justify-center mx-auto mb-6"><svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg></div>
+                <h3 class="text-2xl font-bold mb-4">Edição de Vídeo</h3>
+                <p class="text-gray-400 text-sm">Cortes rítmicos e sound design para máxima retenção.</p>
+            </div>
+            <div class="p-8 rounded-2xl bg-white/5 border border-white/5 hover:border-rose-500/30 transition-all">
+                <div class="w-16 h-16 bg-rose-600/20 text-rose-500 rounded-2xl flex items-center justify-center mx-auto mb-6"><svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg></div>
+                <h3 class="text-2xl font-bold mb-4">Thumbnails Impacto</h3>
+                <p class="text-gray-400 text-sm">Design estratégico focado em cliques (High CTR).</p>
+            </div>
+            <div class="p-8 rounded-2xl bg-white/5 border border-white/10 hover:border-purple-500/30 transition-all">
+                <div class="w-16 h-16 bg-purple-600/20 text-purple-500 rounded-2xl flex items-center justify-center mx-auto mb-6"><svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M13 10V3L4 14h7v7l9-11h-7z" /></svg></div>
+                <h3 class="text-2xl font-bold mb-4">Branding Canais</h3>
+                <p class="text-gray-400 text-sm">Identidade visual completa para profissionalizar seu canal.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Trabalhos -->
+    <section id="work" class="py-24 px-6 max-w-7xl mx-auto">
+        <div class="text-center mb-16">
+            <h2 class="text-4xl md:text-7xl font-black mb-6 tracking-tighter uppercase leading-none">PROJETOS <br><span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-500 to-rose-500">EM DESTAQUE</span></h2>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10">
+            <!-- Projeto 1 -->
+            <div class="group bg-[#0a0a0a] rounded-[2.5rem] overflow-hidden border border-white/5 hover:border-blue-500/30 transition-all shadow-2xl">
+                <div class="aspect-video overflow-hidden relative">
+                    <img src="https://img.youtube.com/vi/M_hMyDnXo9s/maxresdefault.jpg" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700">
+                    <div class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <span class="px-8 py-3 bg-white text-black font-black text-[10px] rounded-xl">VER CASE</span>
+                    </div>
+                </div>
+                <div class="p-8">
+                    <h3 class="text-xl font-bold mb-2">Quiz Espacial: 30 Fatos</h3>
+                    <p class="text-xs text-gray-500 italic mb-4">Edição ultra-dinâmica focada em Gen Z e retenção.</p>
+                </div>
+            </div>
+            <!-- Projeto 2 -->
+            <div class="group bg-[#0a0a0a] rounded-[2.5rem] overflow-hidden border border-white/5 hover:border-rose-500/30 transition-all shadow-2xl">
+                <div class="aspect-video overflow-hidden relative">
+                    <img src="https://i.postimg.cc/cJXfhpG5/não_confie.jpg" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700">
+                    <div class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <span class="px-8 py-3 bg-white text-black font-black text-[10px] rounded-xl">VER CASE</span>
+                    </div>
+                </div>
+                <div class="p-8">
+                    <h3 class="text-xl font-bold mb-2">Creepypasta: NÃO CONFIE</h3>
+                    <p class="text-xs text-gray-500 italic mb-4">Thumbnail de terror com foco em CTR emocional.</p>
+                </div>
+            </div>
+            <!-- Projeto 3 -->
+            <div class="group bg-[#0a0a0a] rounded-[2.5rem] overflow-hidden border border-white/5 hover:border-blue-500/30 transition-all shadow-2xl">
+                <div class="aspect-video overflow-hidden relative">
+                    <img src="https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&q=80&w=800" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700">
+                    <div class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <span class="px-8 py-3 bg-white text-black font-black text-[10px] rounded-xl">VER CASE</span>
+                    </div>
+                </div>
+                <div class="p-8">
+                    <h3 class="text-xl font-bold mb-2">Upgrade Setup Showcase</h3>
+                    <p class="text-xs text-gray-500 italic mb-4">Shorts com sound design SFX e transições invisíveis.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Valores / Preços -->
+    <section id="pricing" class="py-24 md:py-32 px-6 bg-[#020202] relative">
+        <div class="max-w-7xl mx-auto text-center mb-16">
+            <h2 class="text-4xl md:text-8xl font-black mb-12 tracking-tighter uppercase leading-none">INVESTIMENTO <br><span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-500 to-rose-500">PACOTES</span></h2>
+            
+            <div class="flex justify-center mb-16 overflow-x-auto no-scrollbar">
+                <div class="bg-white/5 border border-white/10 p-2 rounded-full flex gap-2 backdrop-blur-xl">
+                    <button onclick="switchTab('shorts')" id="tab-shorts" class="pricing-tab-active px-8 py-4 rounded-full text-[10px] font-black uppercase tracking-widest transition-all">Shorts / Reels</button>
+                    <button onclick="switchTab('long')" id="tab-long" class="px-8 py-4 rounded-full text-[10px] font-black uppercase tracking-widest text-gray-500 hover:text-white transition-all">YouTube (Long)</button>
+                    <button onclick="switchTab('thumbs')" id="tab-thumbs" class="px-8 py-4 rounded-full text-[10px] font-black uppercase tracking-widest text-gray-500 hover:text-white transition-all">Thumbnails</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="pricing-grid" class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <!-- Cards gerados via JS -->
+        </div>
+    </section>
+
+    <!-- Contato -->
+    <section id="contact" class="py-32 px-6">
+        <div class="max-w-4xl mx-auto bg-gradient-to-br from-[#0d0d0d] to-black p-12 rounded-[2rem] border border-white/10 text-center relative overflow-hidden group">
+            <h2 class="text-4xl md:text-5xl font-extrabold mb-6">Vamos elevar o nível do seu canal?</h2>
+            <p class="text-gray-400 mb-10 text-lg">Disponível para novos projetos e parcerias fixas.</p>
+            <div class="flex flex-col sm:flex-row gap-6 justify-center">
+                <button onclick="openContactModal()" class="px-8 py-4 bg-white text-black font-bold rounded-xl hover:scale-105 transition-transform flex items-center justify-center gap-3">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" /><path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" /></svg>
+                    Contatos Diretos
+                </button>
+                <a href="https://wa.me/seunumeroaqui" class="px-8 py-4 bg-[#25D366] text-white font-bold rounded-xl hover:scale-105 transition-transform flex items-center justify-center gap-3">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347" /></svg>
+                    WhatsApp Direto
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Modal de Contato -->
+    <div id="contact-modal" class="hidden fixed inset-0 z-[100] modal-blur flex items-center justify-center p-6 animate-in fade-in duration-300">
+        <div class="max-w-lg w-full bg-[#0d0d0d] rounded-[3rem] border border-white/10 p-12 text-center relative">
+            <button onclick="closeContactModal()" class="absolute top-8 right-8 text-gray-500 hover:text-white transition-all hover:rotate-90 duration-300">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M6 18L18 6M6 6l12 12" /></svg>
+            </button>
+            <div class="w-32 h-32 rounded-full overflow-hidden mx-auto mb-8 border-2 border-blue-500 shadow-2xl">
+                <img src="https://i.postimg.cc/Qxf21tFh/perfil-vendas.png" class="w-full h-full object-cover">
+            </div>
+            <h2 class="text-3xl font-black mb-8">VAMOS <span class="text-blue-500">TRABALHAR</span>?</h2>
+            <div class="space-y-4">
+                <a href="#" class="block p-5 bg-white text-black font-black rounded-2xl hover:scale-[1.02] transition-transform">WHATSAPP</a>
+                <a href="mailto:contato@enzobrassanini.com" class="block p-5 bg-white/5 border border-white/10 text-white font-black rounded-2xl hover:bg-white/10 transition-all">E-MAIL</a>
+                <a href="#" class="block p-5 bg-[#5865F2] text-white font-black rounded-2xl hover:scale-[1.02] transition-transform">DISCORD</a>
+            </div>
+        </div>
+    </div>
+
+    <footer class="py-12 border-t border-white/5 text-center text-gray-500 text-sm">
+        <p>© 2024 Enzo Brassanini. Todos os direitos reservados.</p>
+    </footer>
+
+    <script>
+        // Menu Mobile
+        function toggleMenu() {
+            const menu = document.getElementById('mobile-menu');
+            menu.classList.toggle('hidden');
+            menu.classList.toggle('flex');
+        }
+
+        // Arsenal Técnico Toggle
+        function toggleArsenal() {
+            const grid = document.getElementById('arsenal-grid');
+            const arrow = document.getElementById('arsenal-arrow');
+            grid.classList.toggle('hidden');
+            arrow.classList.toggle('rotate-180');
+        }
+
+        // Modal de Contato
+        function openContactModal() {
+            document.getElementById('contact-modal').classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+        function closeContactModal() {
+            document.getElementById('contact-modal').classList.add('hidden');
+            document.body.style.overflow = 'auto';
+        }
+
+        // Sistema de Preços (Valores)
+        const pricingData = {
+            shorts: [
+                { name: "Básico", price: "35", old: "50", features: ["Corte e Áudio", "Legendas Padrão", "Entrega 48h"] },
+                { name: "Turbo", price: "70", old: "100", features: ["Legendas Dinâmicas", "Sound Design", "B-Roll"], popular: true },
+                { name: "Premium", price: "130", old: "180", features: ["Motion 3D", "VFX Avançado", "Prioridade Máxima"] }
+            ],
+            long: [
+                { name: "Starter", price: "140", old: "200", features: ["Cortes de Erro", "Tratamento de Som", "Trilha Básica"] },
+                { name: "Creator", price: "320", old: "450", features: ["Sound Design", "B-Roll Massivo", "Legendas Dinâmicas"], popular: true },
+                { name: "Doc-Style", price: "750", old: "1000", features: ["Animação After Effects", "Color Grading Cinema", "3D Elements"] }
+            ],
+            thumbs: [
+                { name: "Standard", price: "25", old: "35", features: ["Manipulação Imagem", "Psicologia das Cores", "Entrega 24h"] },
+                { name: "Illustrated", price: "50", old: "70", features: ["Pintura Digital", "High-End Comp", "3 Revisões"], popular: true },
+                { name: "Identity", price: "110", old: "150", features: ["Banner Canal", "Avatar Pro", "3 Thumbs Grátis"] }
+            ]
+        };
+
+        function switchTab(type) {
+            // Update tabs UI
+            ['shorts', 'long', 'thumbs'].forEach(t => {
+                const tab = document.getElementById(`tab-${t}`);
+                tab.classList.remove('pricing-tab-active', 'text-white');
+                tab.classList.add('text-gray-500');
+            });
+            const activeTab = document.getElementById(`tab-${type}`);
+            activeTab.classList.add('pricing-tab-active');
+            activeTab.classList.remove('text-gray-500');
+
+            // Render cards
+            const grid = document.getElementById('pricing-grid');
+            grid.innerHTML = '';
+            
+            pricingData[type].forEach(plan => {
+                const card = `
+                    <div class="group relative bg-[#080808] border ${plan.popular ? 'border-blue-500/50 shadow-[0_0_50px_rgba(59,130,246,0.1)]' : 'border-white/5'} rounded-[3rem] p-10 hover:-translate-y-2 transition-all">
+                        ${plan.popular ? '<span class="absolute -top-4 left-1/2 -translate-x-1/2 bg-blue-600 px-6 py-2 rounded-full text-[8px] font-black uppercase tracking-widest">Popular</span>' : ''}
+                        <h3 class="text-2xl font-bold mb-4">${plan.name}</h3>
+                        <div class="flex items-baseline gap-2 mb-6">
+                            <span class="text-4xl font-black">$${plan.price}</span>
+                            <span class="text-gray-600 line-through text-sm">$${plan.old}</span>
+                        </div>
+                        <ul class="space-y-4 mb-10 text-gray-400 text-xs font-bold uppercase tracking-widest">
+                            ${plan.features.map(f => `<li class="flex items-center gap-2"><div class="w-1 h-1 bg-blue-500 rounded-full"></div>${f}</li>`).join('')}
+                        </ul>
+                        <button onclick="openContactModal()" class="w-full py-4 rounded-2xl ${plan.popular ? 'bg-blue-600' : 'bg-white text-black'} font-black text-[9px] uppercase tracking-widest transition-all">RESERVAR</button>
+                    </div>
+                `;
+                grid.innerHTML += card;
+            });
+        }
+
+        // Inicia com shorts
+        switchTab('shorts');
+    </script>
 </body>
 </html>

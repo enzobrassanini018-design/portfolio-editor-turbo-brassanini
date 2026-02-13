@@ -1,9 +1,8 @@
-
 <!DOCTYPE html>
 <html lang="pt-BR" class="scroll-smooth">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Enzo Brassanini | Editor & Designer de Elite</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -19,6 +18,8 @@
             background-color: #020202;
             color: #ffffff;
             overflow-x: hidden;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
         }
         h1, h2, h3, h4 {
             font-family: 'Plus Jakarta Sans', sans-serif;
@@ -26,11 +27,35 @@
         .text-glow-blue { text-shadow: 0 0 15px var(--blue-glow); }
         .text-glow-rose { text-shadow: 0 0 15px var(--rose-glow); }
         
+        /* Background Animations */
         @keyframes float {
             0%, 100% { transform: translateY(0px) rotate(0deg); }
-            50% { transform: translateY(-20px) rotate(2deg); }
+            50% { transform: translateY(-15px) rotate(1deg); }
         }
         .animate-float { animation: float 6s ease-in-out infinite; }
+
+        @keyframes shine {
+            100% { left: 125%; }
+        }
+        
+        .btn-shine {
+            position: relative;
+            overflow: hidden;
+        }
+        .btn-shine::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -75%;
+            width: 50%;
+            height: 200%;
+            background: linear-gradient(to right, transparent, rgba(255, 255, 255, 0.4), transparent);
+            transform: rotate(35deg);
+            z-index: 1;
+        }
+        .btn-shine:active::after, .btn-shine:hover::after {
+            animation: shine 0.7s forwards;
+        }
 
         @keyframes slide-line {
             0% { left: -100%; opacity: 0; }
@@ -48,20 +73,492 @@
 
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        .pricing-tab-active-blue { background: #2563eb; color: white; box-shadow: 0 0 20px rgba(59, 130, 246, 0.5); }
+        .pricing-tab-active-rose { background: #e11d48; color: white; box-shadow: 0 0 20px rgba(225, 29, 72, 0.5); }
+        .pricing-tab-active-purple { background: #9333ea; color: white; box-shadow: 0 0 20px rgba(147, 51, 234, 0.5); }
+
+        .portfolio-filter-active {
+            color: white;
+            position: relative;
+        }
+        .portfolio-filter-active::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(to right, #2563eb, #3b82f6);
+            border-radius: 1rem;
+            z-index: -1;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .modal-blur {
+            backdrop-filter: blur(20px);
+            background-color: rgba(0, 0, 0, 0.95);
+        }
+
+        .animate-portfolio-window {
+            animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Mobile Adjustments */
+        @media (max-width: 640px) {
+            .section-padding { padding-top: 5rem; padding-bottom: 5rem; }
+        }
     </style>
-    <script type="importmap">
-    {
-      "imports": {
-        "react": "https://esm.sh/react@^19.2.4",
-        "react-dom/": "https://esm.sh/react-dom@^19.2.4/",
-        "react/": "https://esm.sh/react@^19.2.4/",
-        "@google/genai": "https://esm.sh/@google/genai@^1.41.0"
-      }
-    }
-    </script>
+<script type="importmap">
+{
+  "imports": {
+    "react": "https://esm.sh/react@^19.2.4",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.4/",
+    "@google/genai": "https://esm.sh/@google/genai@^1.41.0",
+    "react/": "https://esm.sh/react@^19.2.4/"
+  }
+}
+</script>
 </head>
-<body>
-    <div id="root"></div>
-    <script type="module" src="index.tsx"></script>
+<body class="bg-[#050505] selection:bg-blue-500/30">
+
+    <!-- Background Decorations (Ocultas em mobile para performance se desejar, ou mantidas baixas) -->
+    <div class="fixed inset-0 pointer-events-none overflow-hidden z-0">
+        <div class="neon-line top-[20%] opacity-10 md:opacity-20" style="animation-delay: 2s"></div>
+        <div class="neon-line top-[80%] opacity-10 md:opacity-15" style="animation-delay: 8s"></div>
+        <div class="absolute bottom-[10%] left-[10%] opacity-5 hidden sm:block">
+            <div class="text-[60px] md:text-[100px] font-black text-white/5 select-none tracking-tighter">00:00:24</div>
+        </div>
+    </div>
+
+    <!-- Navegação -->
+    <nav class="fixed top-0 left-0 w-full z-50 bg-black/80 backdrop-blur-lg border-b border-white/10 h-16 md:h-20">
+        <div class="max-w-7xl mx-auto px-4 md:px-6 h-full flex items-center justify-between">
+            <div class="text-lg md:text-2xl font-extrabold tracking-tighter cursor-pointer active:scale-95 transition-transform" onclick="scrollToSection('home')">
+                <span class="text-blue-500">ENZO</span>
+                <span class="text-rose-500">BRASSANINI</span>
+            </div>
+            
+            <!-- Desktop Links -->
+            <div class="hidden lg:flex gap-6 xl:gap-8 text-[10px] font-black uppercase tracking-widest text-gray-400">
+                <button onclick="scrollToSection('home')" class="hover:text-white transition-colors uppercase py-2">Início</button>
+                <button onclick="scrollToSection('about')" class="hover:text-white transition-colors uppercase py-2">Sobre</button>
+                <button onclick="scrollToSection('services')" class="hover:text-white transition-colors uppercase py-2">Serviços</button>
+                <button onclick="scrollToSection('work')" class="hover:text-white transition-colors uppercase py-2">Trabalhos</button>
+                <button onclick="scrollToSection('pricing')" class="hover:text-white transition-colors uppercase py-2">Valores</button>
+                <button onclick="scrollToSection('contact')" class="hover:text-white transition-colors uppercase py-2">Contato</button>
+            </div>
+
+            <button onclick="openContactModal()" class="hidden sm:block px-5 md:px-6 py-2 md:py-2.5 bg-gradient-to-r from-blue-600 to-rose-600 rounded-full text-[9px] md:text-[10px] font-black hover:scale-105 active:scale-95 transition-all text-white shadow-lg shadow-blue-900/20 uppercase tracking-widest">
+                ORÇAMENTO
+            </button>
+
+            <!-- Mobile Toggle com hit area maior -->
+            <button class="lg:hidden p-3 -mr-2 text-white active:scale-90 transition-transform" onclick="toggleMenu()" aria-label="Abrir Menu">
+                <svg id="menu-icon" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7" />
+                </svg>
+            </button>
+        </div>
+
+        <!-- Mobile Menu Overlay -->
+        <div id="mobile-menu" class="hidden lg:hidden fixed inset-0 top-16 bg-[#050505] flex-col p-6 gap-4 text-center z-40 animate-portfolio-window">
+            <button onclick="scrollToSection('home'); toggleMenu();" class="text-sm font-black uppercase tracking-[0.2em] text-gray-400 py-4 border-b border-white/5">Início</button>
+            <button onclick="scrollToSection('about'); toggleMenu();" class="text-sm font-black uppercase tracking-[0.2em] text-gray-400 py-4 border-b border-white/5">Sobre</button>
+            <button onclick="scrollToSection('services'); toggleMenu();" class="text-sm font-black uppercase tracking-[0.2em] text-gray-400 py-4 border-b border-white/5">Serviços</button>
+            <button onclick="scrollToSection('work'); toggleMenu();" class="text-sm font-black uppercase tracking-[0.2em] text-gray-400 py-4 border-b border-white/5">Trabalhos</button>
+            <button onclick="scrollToSection('pricing'); toggleMenu();" class="text-sm font-black uppercase tracking-[0.2em] text-gray-400 py-4 border-b border-white/5">Valores</button>
+            <button onclick="scrollToSection('contact'); toggleMenu();" class="text-sm font-black uppercase tracking-[0.2em] text-gray-400 py-4 border-b border-white/5">Contato</button>
+            <button onclick="openContactModal(); toggleMenu();" class="mt-4 px-6 py-5 bg-white text-black rounded-2xl text-xs font-black uppercase tracking-widest active:scale-95 transition-transform shadow-xl">SOLICITAR ORÇAMENTO</button>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section id="home" class="relative min-h-screen flex items-center justify-center pt-24 md:pt-32 pb-16 md:pb-20 overflow-hidden z-10 px-4">
+        <div class="absolute top-1/4 -left-20 w-[200px] md:w-[600px] h-[200px] md:h-[600px] bg-blue-600/10 rounded-full blur-[80px] md:blur-[140px] animate-pulse"></div>
+        
+        <div class="relative z-10 flex flex-col lg:flex-row items-center justify-between gap-12 lg:gap-16 max-w-7xl mx-auto w-full">
+            <!-- Content -->
+            <div class="flex-1 text-center lg:text-left order-2 lg:order-1 w-full">
+                <div class="inline-flex items-center gap-3 px-3 py-1.5 md:px-4 md:py-2 rounded-full bg-white/5 border border-white/10 mb-6 md:mb-8 backdrop-blur-sm mx-auto lg:mx-0">
+                    <span class="relative flex h-2 w-2">
+                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
+                    </span>
+                    <span class="text-[8px] md:text-xs font-black tracking-[0.2em] uppercase text-blue-400">Creative Editor & Thumbmaker</span>
+                </div>
+                
+                <h1 class="text-4xl sm:text-5xl md:text-7xl lg:text-8xl font-black mb-6 md:mb-8 tracking-tighter leading-[1.1]">
+                    CONTEÚDO <br class="hidden sm:block" /> 
+                    <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-500 via-white to-rose-500 text-glow-blue">DE ELITE</span>
+                </h1>
+                
+                <p class="text-gray-400 text-sm sm:text-base md:text-xl mb-8 md:mb-12 max-w-2xl mx-auto lg:mx-0 leading-relaxed font-light tracking-wide px-2 sm:px-0">
+                    Storytelling visual focado em <span class="text-white font-semibold">psicologia de retenção</span>. Transformo vídeos comuns em experiências cinematográficas que dominam a atenção e geram cliques.
+                </p>
+                
+                <div class="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start items-center px-4 sm:px-0">
+                    <button onclick="scrollToSection('work')" class="w-full sm:w-auto px-8 py-4 bg-white text-black font-black rounded-2xl active:scale-95 hover:bg-blue-600 hover:text-white transition-all text-[10px] uppercase tracking-widest shadow-2xl">Ver Portfólio</button>
+                    <button onclick="scrollToSection('pricing')" class="w-full sm:w-auto px-8 py-4 bg-transparent border border-white/10 text-white font-black rounded-2xl active:scale-95 hover:bg-white/5 transition-all backdrop-blur-sm text-[10px] uppercase tracking-widest">Ver Valores</button>
+                </div>
+            </div>
+
+            <!-- Profile Image Container -->
+            <div class="flex-1 relative flex justify-center items-center order-1 lg:order-2 w-full max-w-[280px] sm:max-w-[350px] md:max-w-none">
+                <div class="relative z-10 w-full aspect-square md:w-[420px] md:h-[420px] animate-float">
+                    <div class="absolute inset-0 border-2 border-white/10 rounded-[2rem] md:rounded-[3rem] -rotate-6 scale-105"></div>
+                    <div class="relative w-full h-full overflow-hidden rounded-[2rem] md:rounded-[3rem] border border-white/20 bg-[#080808] shadow-2xl">
+                        <img src="https://i.postimg.cc/Qxf21tFh/perfil-vendas.png" alt="Enzo Brassanini" class="w-full h-full object-cover grayscale-[20%] hover:grayscale-0 transition-all duration-700" />
+                    </div>
+                    <!-- Floater Badge -->
+                    <div class="absolute -bottom-6 md:-bottom-10 left-1/2 -translate-x-1/2 w-[90%] sm:w-[110%] bg-black/80 backdrop-blur-2xl border border-white/10 px-4 md:px-8 py-3 md:py-5 rounded-2xl shadow-2xl">
+                        <div class="text-center">
+                            <span class="block text-[8px] md:text-[10px] text-blue-400 font-black tracking-[0.2em] uppercase mb-1">Creative Video Editor</span>
+                            <h2 class="text-lg md:text-2xl font-black tracking-tighter">ENZO <span class="text-rose-500">BRASSANINI</span></h2>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- About Section -->
+    <section id="about" class="py-20 md:py-32 px-4 md:px-6 relative z-10 bg-black/20">
+        <div class="max-w-7xl mx-auto flex flex-col lg:flex-row items-center lg:items-start gap-12 md:gap-16 lg:gap-24">
+            <div class="w-full lg:flex-1 relative">
+                <div class="rounded-[2rem] md:rounded-[3rem] overflow-hidden border border-white/10 bg-[#0a0a0a] aspect-square w-full relative group">
+                    <img src="https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&q=80&w=800" class="w-full h-full object-cover opacity-50 transition-transform duration-1000 group-hover:scale-105" />
+                    <div class="absolute bottom-6 md:bottom-12 left-6 md:left-12 right-6 md:right-12 grid grid-cols-2 gap-3 md:gap-6">
+                        <div class="p-4 md:p-6 rounded-xl md:rounded-2xl bg-white/5 border border-white/10 backdrop-blur-md text-center">
+                            <span class="block text-xl md:text-3xl font-black text-blue-500 mb-1">+3</span>
+                            <span class="text-[8px] md:text-[10px] text-gray-400 font-bold uppercase tracking-widest">Anos Exp.</span>
+                        </div>
+                        <div class="p-4 md:p-6 rounded-xl md:rounded-2xl bg-white/5 border border-white/10 backdrop-blur-md text-center">
+                            <span class="block text-xl md:text-3xl font-black text-rose-500 mb-1">CTR+</span>
+                            <span class="text-[8px] md:text-[10px] text-gray-400 font-bold uppercase tracking-widest">Estratégico</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="w-full lg:flex-1 text-center lg:text-left">
+                <div class="inline-flex items-center gap-4 px-6 py-2.5 rounded-full bg-white/5 border border-white/10 mb-8 md:mb-10">
+                    <span class="text-[10px] md:text-xs font-black tracking-[0.2em] uppercase">Quem é <span class="text-blue-400">Enzo</span>?</span>
+                </div>
+                <h2 class="text-3xl md:text-5xl lg:text-6xl font-black mb-8 md:mb-10 tracking-tight leading-tight uppercase italic text-glow-blue">RETENÇÃO DE ELITE</h2>
+                <p class="text-gray-400 text-sm md:text-lg font-light leading-relaxed mb-8 md:mb-12">
+                    O que começou há 3 anos como uma curiosidade técnica, evoluiu para uma obsessão por resultados no YouTube. Eu não entrego apenas cortes; eu construo a <span class="text-blue-400 font-bold">estratégia visual</span> que mantém o seu público hipnotizado do início ao fim.
+                </p>
+                <button onclick="toggleArsenal()" class="flex items-center justify-center lg:justify-start gap-4 px-8 py-5 bg-white/5 border border-white/10 rounded-2xl active:scale-95 hover:bg-white/10 transition-all w-full md:w-auto mb-8">
+                    <span class="text-[10px] font-black uppercase tracking-[0.2em]">Ver Arsenal Técnico</span>
+                    <svg id="arsenal-arrow" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-blue-500 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M19 9l-7 7-7-7" stroke-width="3" /></svg>
+                </button>
+                <div id="arsenal-grid" class="hidden grid grid-cols-1 sm:grid-cols-2 gap-4 animate-portfolio-window">
+                    <div class="p-5 md:p-6 bg-black/40 border border-blue-500/20 rounded-xl md:rounded-2xl"><h4 class="text-blue-400 font-black uppercase text-[10px] mb-2">Motion 2D/3D</h4><p class="text-[9px] text-gray-500 uppercase tracking-widest font-bold">Animações de alto nível.</p></div>
+                    <div class="p-5 md:p-6 bg-black/40 border border-rose-500/20 rounded-xl md:rounded-2xl"><h4 class="text-rose-400 font-black uppercase text-[10px] mb-2">Engenharia de Cliques</h4><p class="text-[9px] text-gray-500 uppercase tracking-widest font-bold">Thumbnails High CTR.</p></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Services Summary (Icones) -->
+    <section id="services" class="py-16 md:py-24 border-y border-white/5 relative z-10 px-4">
+        <div class="max-w-7xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-12">
+            <div class="p-6 md:p-8 rounded-2xl bg-white/5 border border-white/5 transition-all text-center">
+                <div class="w-12 h-12 md:w-16 md:h-16 bg-blue-600/20 text-blue-500 rounded-xl md:rounded-2xl flex items-center justify-center mx-auto mb-6"><svg class="h-6 w-6 md:h-8 md:w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" stroke-width="2" /></svg></div>
+                <h3 class="text-xl md:text-2xl font-bold mb-3 md:mb-4">Edição de Vídeo</h3>
+                <p class="text-gray-400 text-xs md:text-sm">Storytelling e sound design para máxima retenção.</p>
+            </div>
+            <div class="p-6 md:p-8 rounded-2xl bg-white/5 border border-white/5 transition-all text-center">
+                <div class="w-12 h-12 md:w-16 md:h-16 bg-rose-600/20 text-rose-500 rounded-xl md:rounded-2xl flex items-center justify-center mx-auto mb-6"><svg class="h-6 w-6 md:h-8 md:w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" stroke-width="2" /></svg></div>
+                <h3 class="text-xl md:text-2xl font-bold mb-3 md:mb-4">Thumbnails Impacto</h3>
+                <p class="text-gray-400 text-xs md:text-sm">Design focado em cliques (High CTR).</p>
+            </div>
+            <div class="hidden lg:block p-8 rounded-2xl bg-white/5 border border-white/5 transition-all text-center">
+                <div class="w-16 h-16 bg-purple-600/20 text-purple-500 rounded-2xl flex items-center justify-center mx-auto mb-6"><svg class="h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M13 10V3L4 14h7v7l9-11h-7z" stroke-width="2" /></svg></div>
+                <h3 class="text-2xl font-bold mb-4">Branding</h3>
+                <p class="text-gray-400 text-sm">Identidade visual para profissionalizar seu canal.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Pricing Section -->
+    <section id="pricing" class="py-20 md:py-32 px-4 md:px-6 bg-[#020202] relative overflow-hidden">
+        <div id="pricing-bg-glow" class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] md:w-[800px] h-[300px] md:h-[800px] opacity-10 rounded-full blur-[80px] md:blur-[100px] pointer-events-none transition-colors duration-1000 bg-blue-600"></div>
+        <div class="max-w-7xl mx-auto text-center mb-12 md:mb-16 relative z-10">
+            <h2 class="text-4xl md:text-6xl lg:text-8xl font-black mb-8 md:mb-12 tracking-tighter uppercase leading-none px-4">INVESTIMENTO <br /><span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-500 to-rose-500">PACOTES</span></h2>
+            
+            <!-- Tabs Scrollable on Mobile -->
+            <div class="flex justify-start md:justify-center mb-12 md:mb-16 overflow-x-auto no-scrollbar pb-4 px-4">
+                <div class="bg-white/5 border border-white/10 p-1.5 md:p-2 rounded-2xl md:rounded-[2.5rem] flex gap-2 backdrop-blur-xl shadow-2xl shrink-0">
+                    <button onclick="switchPricing('shorts')" id="price-tab-shorts" class="pricing-tab-active-blue px-6 md:px-10 py-3 md:py-4 rounded-full text-[9px] md:text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap active:scale-95">Shorts / Reels</button>
+                    <button onclick="switchPricing('long')" id="price-tab-long" class="px-6 md:px-10 py-3 md:py-4 rounded-full text-[9px] md:text-[10px] font-black uppercase tracking-widest text-gray-500 hover:text-white transition-all whitespace-nowrap active:scale-95">YouTube (Long)</button>
+                    <button onclick="switchPricing('thumbs')" id="price-tab-thumbs" class="px-6 md:px-10 py-3 md:py-4 rounded-full text-[9px] md:text-[10px] font-black uppercase tracking-widest text-gray-500 hover:text-white transition-all whitespace-nowrap active:scale-95">Thumbnails</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Pricing Grid -->
+        <div id="pricing-grid" class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-10 items-stretch relative z-10 px-4">
+            <!-- Injetado via JS -->
+        </div>
+        
+        <p class="mt-12 md:mt-16 text-center text-gray-600 text-[8px] md:text-[10px] font-black uppercase tracking-[0.2em] md:tracking-[0.4em] opacity-60 relative z-10">* Valores promocionais por tempo limitado. Economize até 30% em pedidos em lote.</p>
+    </section>
+
+    <!-- Portfolio Section -->
+    <section id="work" class="py-20 md:py-24 px-4 md:px-6 max-w-7xl mx-auto relative z-10">
+        <div class="text-center mb-12 md:mb-16">
+            <h2 class="text-3xl md:text-7xl font-black mb-10 md:mb-12 tracking-tighter uppercase">PORTFÓLIO <br /><span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-500 to-rose-500 text-glow-blue">CASES</span></h2>
+            
+            <!-- Filters Scrollable -->
+            <div class="w-full flex justify-start md:justify-center mb-12 md:mb-16 overflow-x-auto no-scrollbar pb-2">
+                <div class="flex gap-2 p-1.5 md:p-2 bg-white/5 border border-white/10 rounded-2xl md:rounded-[2rem] backdrop-blur-2xl shrink-0">
+                    <button onclick="filterPortfolio('all')" class="portfolio-filter-active filter-btn px-6 md:px-8 py-3 md:py-4 rounded-xl md:rounded-2xl text-[8px] md:text-[10px] font-black uppercase tracking-widest transition-all">Todos</button>
+                    <button onclick="filterPortfolio('long')" class="filter-btn px-6 md:px-8 py-3 md:py-4 rounded-xl md:rounded-2xl text-[8px] md:text-[10px] font-black uppercase tracking-widest text-gray-500 hover:text-white transition-all">YouTube Long</button>
+                    <button onclick="filterPortfolio('short')" class="filter-btn px-6 md:px-8 py-3 md:py-4 rounded-xl md:rounded-2xl text-[8px] md:text-[10px] font-black uppercase tracking-widest text-gray-500 hover:text-white transition-all">Shorts / Reels</button>
+                    <button onclick="filterPortfolio('thumbnail')" class="filter-btn px-6 md:px-8 py-3 md:py-4 rounded-xl md:rounded-2xl text-[8px] md:text-[10px] font-black uppercase tracking-widest text-gray-500 hover:text-white transition-all">Thumbnails</button>
+                </div>
+            </div>
+        </div>
+        <div id="portfolio-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-10">
+            <!-- Injetado via JS -->
+        </div>
+    </section>
+
+    <!-- Contact Banner -->
+    <section id="contact" class="py-20 md:py-32 px-4 md:px-6 relative z-10">
+        <div class="max-w-4xl mx-auto bg-gradient-to-br from-[#0d0d0d] to-black p-8 md:p-12 rounded-[2rem] md:rounded-[3rem] border border-white/10 text-center relative overflow-hidden group">
+            <h2 class="text-3xl md:text-5xl font-extrabold mb-6">Pronto para elevar o nível?</h2>
+            <div class="flex flex-col sm:flex-row gap-4 md:gap-6 justify-center mt-8 md:mt-12">
+                <button onclick="openContactModal()" class="w-full sm:w-auto px-8 py-4 bg-white text-black font-bold rounded-xl active:scale-95 transition-transform uppercase tracking-widest text-[10px]">Contatos Diretos</button>
+                <a href="https://wa.me/seunumero" class="w-full sm:w-auto px-8 py-4 bg-[#25D366] text-white font-bold rounded-xl active:scale-95 transition-transform flex items-center justify-center gap-3 uppercase tracking-widest text-[10px]">WhatsApp</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="py-12 border-t border-white/5 text-center text-gray-600 text-xs relative z-10">
+        <p>© 2024 Enzo Brassanini. Design & Edição.</p>
+    </footer>
+
+    <!-- Modals -->
+    <div id="contact-modal" class="hidden fixed inset-0 z-[100] modal-blur flex items-center justify-center p-4">
+        <div class="max-w-md w-full bg-[#0d0d0d] rounded-[2.5rem] border border-white/10 p-8 md:p-12 text-center relative animate-portfolio-window">
+            <button onclick="closeContactModal()" class="absolute top-6 right-6 text-gray-500 active:scale-75 transition-transform p-2"><svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M6 18L18 6M6 6l12 12" stroke-width="2" /></svg></button>
+            <div class="w-24 h-24 md:w-32 md:h-32 rounded-full overflow-hidden mx-auto mb-8 border-2 border-blue-500 shadow-2xl"><img src="https://i.postimg.cc/Qxf21tFh/perfil-vendas.png" class="w-full h-full object-cover"></div>
+            <h2 class="text-2xl md:text-3xl font-black mb-8 italic uppercase">VAMOS <span class="text-blue-500">CONVERSAR</span>?</h2>
+            <div class="space-y-4">
+                <a href="https://wa.me/seunumero" class="block p-5 bg-white text-black font-black rounded-2xl active:scale-95 transition-transform text-xs tracking-widest uppercase">WHATSAPP</a>
+                <a href="mailto:contato@enzobrassanini.com" class="block p-5 bg-white/5 border border-white/10 text-white font-black rounded-2xl active:scale-95 transition-all text-xs tracking-widest uppercase">E-MAIL</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Project Modal (Mobile Fullscreen) -->
+    <div id="project-modal" class="hidden fixed inset-0 z-[100] modal-blur flex items-center justify-center p-0 md:p-6 lg:p-12">
+        <div id="project-modal-content" class="relative w-full h-full md:h-auto max-w-7xl md:max-h-[90vh] bg-[#050505] md:rounded-[3rem] border-0 md:border border-white/10 flex flex-col lg:flex-row overflow-y-auto md:overflow-hidden animate-portfolio-window">
+            <!-- JS Inject -->
+        </div>
+    </div>
+
+    <!-- AI Floating Bubble -->
+    <div class="fixed bottom-6 right-6 z-[60]">
+        <button id="ai-btn" onclick="toggleChat()" class="w-14 h-14 md:w-16 md:h-16 bg-white text-black rounded-2xl flex items-center justify-center shadow-2xl active:scale-90 transition-all group">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 md:h-8 md:w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" /></svg>
+        </button>
+        <div id="ai-chat" class="hidden fixed inset-4 md:inset-auto md:absolute md:bottom-20 md:right-0 w-auto md:w-[400px] h-[80vh] md:h-[550px] bg-[#0d0d0d] border border-white/10 rounded-[2rem] flex-col shadow-2xl animate-portfolio-window overflow-hidden z-50">
+            <div class="p-6 border-b border-white/10 flex justify-between items-center bg-gradient-to-r from-blue-600/10 to-rose-600/10 shrink-0">
+                <div class="flex items-center gap-3"><div class="w-10 h-10 bg-gradient-to-br from-blue-600 to-rose-600 rounded-xl flex items-center justify-center text-white font-black">E</div><div><span class="block text-sm font-black uppercase">ENZO AI</span><span class="text-[8px] text-blue-400 font-bold uppercase">Online</span></div></div>
+                <button onclick="toggleChat()" class="p-2 text-gray-500 active:scale-75"><svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M6 18L18 6M6 6l12 12" /></svg></button>
+            </div>
+            <div id="chat-messages" class="flex-1 overflow-y-auto p-6 space-y-4 text-xs md:text-sm font-light">
+                <div class="bg-white/5 p-4 rounded-2xl rounded-bl-none text-gray-300">Fala! Sou o assistente do Enzo. Como posso elevar o nível do seu canal hoje?</div>
+            </div>
+            <div class="p-4 md:p-6 border-t border-white/10 shrink-0"><div class="flex gap-2"><input id="chat-input" type="text" placeholder="Pergunte sobre os pacotes..." class="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-[10px] md:text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"><button onclick="sendMessage()" class="p-3 bg-blue-600 rounded-xl text-white active:scale-90"><svg class="h-4 w-4" fill="currentColor" viewBox="0 0 20 20"><path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z" /></svg></button></div></div>
+        </div>
+    </div>
+
+    <script>
+        // Smooth Scroll com Offset Responsivo
+        function scrollToSection(id) {
+            const element = document.getElementById(id);
+            if (element) {
+                const isMobile = window.innerWidth < 768;
+                const offset = isMobile ? 64 : 80;
+                const bodyRect = document.body.getBoundingClientRect().top;
+                const elementRect = element.getBoundingClientRect().top;
+                const elementPosition = elementRect - bodyRect;
+                const offsetPosition = elementPosition - offset;
+
+                window.scrollTo({ top: offsetPosition, behavior: 'smooth' });
+            }
+        }
+
+        // Dados Dinâmicos
+        const projects = [
+            { id: 1, title: 'Quiz Espacial: 30 Fatos', category: 'video', videoType: 'long', imageUrl: 'https://img.youtube.com/vi/M_hMyDnXo9s/maxresdefault.jpg', description: 'Edição ultra-dinâmica focada em Gen Z. Uso intensivo de motion graphics e sound design imersivo.', youtubeId: 'M_hMyDnXo9s', client: 'Quiz do dia', software: ['Premiere Pro', 'After Effects'], results: 'Retenção média de 70% nos primeiros 2 minutos.' },
+            { id: 2, title: 'Creepypasta: NÃO CONFIE', category: 'thumbnail', imageUrl: 'https://i.postimg.cc/cJXfhpG5/não_confie.jpg', description: 'Design de horror psicológico. Foco em iluminação de contorno e atmosfera de suspense.', software: ['Photoshop'], results: 'CTR estabilizado em 14.8%.' },
+            { id: 3, title: 'Minimalismo Digital', category: 'video', videoType: 'short', imageUrl: 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&q=80&w=800', description: 'Short rítmico com legendas dinâmicas e overlays de textura.', software: ['Premiere Pro'], results: 'Viralizou com 1.2M no Reels.' },
+            { id: 4, title: 'O Bom vs O Ruim', category: 'thumbnail', imageUrl: 'https://i.postimg.cc/j2wsm7w6/thumb-bom-ruim.jpg', description: 'Thumbnail estratégica de comparação com gatilhos de autoridade.', software: ['Photoshop'], results: 'Aumento de 40% no CTR.' },
+            { id: 5, title: 'Cidades Invisíveis', category: 'video', videoType: 'long', imageUrl: 'https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?auto=format&fit=crop&q=80&w=800', description: 'Documentário autoral com color grading melancólico.', software: ['DaVinci Resolve'], results: 'Prêmio local de edição.' },
+            { id: 6, title: 'Upgrade Setup', category: 'video', videoType: 'short', imageUrl: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&q=80&w=800', description: 'Transições invisíveis e sound design SFX.', software: ['After Effects'], results: '+25% no TikTok.' }
+        ];
+
+        const pricing = {
+            shorts: [
+                { name: "Básico", level: "CORTE E LEGENDAS", price: "35", old: "50", features: ["CORTE E MONTAGEM", "TRATAMENTO ÁUDIO", "LEGENDAS PADRÃO"], combos: [{ qty: "5 VÍDEOS", price: "150", color: "orange" }, { qty: "10 VÍDEOS", price: "280", color: "green" }] },
+                { name: "Turbo", level: "ALTA RETENÇÃO", price: "70", old: "100", popular: true, features: ["LEGENDAS DINÂMICAS", "SOUND DESIGN (SFX)", "INSERÇÃO B-ROLL"], combos: [{ qty: "5 VÍDEOS", price: "300", color: "orange" }, { qty: "10 VÍDEOS", price: "550", color: "green" }] },
+                { name: "Premium", level: "VFX & 3D", price: "130", old: "180", features: ["MOTION GRAPHICS", "ELEMENTOS 3D", "VFX AVANÇADO"], combos: [{ qty: "3 VÍDEOS", price: "330", color: "orange" }, { qty: "5 VÍDEOS", price: "520", color: "green" }] }
+            ],
+            long: [
+                { name: "Starter", level: "BRUTO E LIMPEZA", price: "140", old: "200", features: ["CORTE DE BRUTOS", "TRATAMENTO ÁUDIO", "TRILHA BÁSICA"], combos: [{ qty: "2 VÍDEOS", price: "240", color: "orange" }, { qty: "4 VÍDEOS", price: "450", color: "green" }] },
+                { name: "Creator", level: "STORYTELLING", price: "320", old: "450", popular: true, features: ["SOUND DESIGN", "B-ROLL MASSIVO", "LEGENDAS DINÂMICAS"], combos: [{ qty: "2 VÍDEOS", price: "550", color: "orange" }, { qty: "4 VÍDEOS", price: "1000", color: "green" }] },
+                { name: "Authority", level: "DOCUMENTÁRIO", price: "750", old: "1000", features: ["AFTER EFFECTS", "MODELOS 3D", "COLOR GRADING"], combos: [{ qty: "2 VÍDEOS", price: "1300", color: "orange" }, { qty: "4 VÍDEOS", price: "2400", color: "green" }] }
+            ],
+            thumbs: [
+                { name: "Standard", level: "HIGH CTR", price: "25", old: "35", features: ["MANIPULAÇÃO IMAGEM", "TRATAMENTO COR", "TIPOGRAFIA"], combos: [{ qty: "5 THUMBS", price: "100", color: "orange" }, { qty: "10 THUMBS", price: "180", color: "green" }] },
+                { name: "Elite", level: "ILLUSTRATED", price: "50", old: "70", popular: true, features: ["ILUSTRAÇÃO DIGITAL", "RENDER 3D", "3 REVISÕES"], combos: [{ qty: "5 THUMBS", price: "200", color: "orange" }, { qty: "10 THUMBS", price: "350", color: "green" }] },
+                { name: "Pack Canal", level: "IDENTITY", price: "110", old: "150", features: ["BANNER CUSTOM", "AVATAR PRO", "3 THUMBS"], combos: [{ qty: "UPDATE MENSAL", price: "200", color: "green" }] }
+            ]
+        };
+
+        // UI Handlers
+        function toggleMenu() { 
+            const menu = document.getElementById('mobile-menu');
+            menu.classList.toggle('hidden');
+            document.body.style.overflow = menu.classList.contains('hidden') ? 'auto' : 'hidden';
+        }
+        
+        function toggleArsenal() { 
+            document.getElementById('arsenal-grid').classList.toggle('hidden'); 
+            document.getElementById('arsenal-arrow').classList.toggle('rotate-180'); 
+        }
+
+        // Render Portfolio
+        function renderPortfolio(filter = 'all') {
+            const grid = document.getElementById('portfolio-grid');
+            const filtered = projects.filter(p => {
+                if (filter === 'all') return true;
+                if (filter === 'long') return p.category === 'video' && p.videoType === 'long';
+                if (filter === 'short') return p.category === 'video' && p.videoType === 'short';
+                return p.category === filter;
+            });
+            grid.innerHTML = filtered.map(p => `
+                <div class="group relative bg-[#0a0a0a] rounded-[2rem] md:rounded-[2.5rem] overflow-hidden border border-white/5 active:border-blue-500/30 transition-all duration-500 shadow-2xl hover:-translate-y-2 cursor-pointer" onclick="openProjectModal(${p.id})">
+                    <div class="aspect-video sm:aspect-square md:aspect-[16/10] overflow-hidden relative">
+                        <img src="${p.imageUrl}" class="w-full h-full object-cover opacity-90 group-hover:scale-105 transition-transform duration-700">
+                        <div class="absolute inset-0 bg-black/60 opacity-0 md:group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-sm">
+                            <span class="px-6 py-3 bg-white text-black font-black text-[9px] rounded-xl tracking-widest uppercase">Ver Case</span>
+                        </div>
+                    </div>
+                    <div class="p-6 md:p-8">
+                        <h3 class="text-lg md:text-xl font-bold mb-2">${p.title}</h3>
+                        <p class="text-[10px] md:text-xs text-gray-500 italic line-clamp-2">${p.description}</p>
+                    </div>
+                </div>`).join('');
+        }
+
+        function filterPortfolio(category) {
+            document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('portfolio-filter-active', 'text-white'));
+            event.currentTarget.classList.add('portfolio-filter-active', 'text-white');
+            renderPortfolio(category);
+        }
+
+        // Render Pricing
+        function renderPricing(type = 'shorts') {
+            const grid = document.getElementById('pricing-grid');
+            const color = type === 'shorts' ? 'blue' : (type === 'long' ? 'rose' : 'purple');
+            document.getElementById('pricing-bg-glow').className = `absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] md:w-[800px] h-[300px] md:h-[800px] opacity-10 rounded-full blur-[80px] pointer-events-none transition-colors duration-1000 bg-${color}-600`;
+            
+            grid.innerHTML = pricing[type].map(plan => `
+                <div class="group relative bg-[#080808] border ${plan.popular ? `border-${color}-500/50 shadow-[0_0_50px_rgba(59,130,246,0.1)]` : 'border-white/5'} rounded-[2rem] md:rounded-[3rem] p-8 md:p-10 hover:-translate-y-2 transition-all duration-500 flex flex-col">
+                    ${plan.popular ? `<span class="absolute -top-4 left-1/2 -translate-x-1/2 bg-${color}-600 px-6 md:px-8 py-2 md:py-2.5 rounded-full text-[8px] md:text-[9px] font-black uppercase tracking-widest shadow-2xl animate-pulse">Especial</span>` : ''}
+                    <div class="mb-6 md:mb-8 relative z-10">
+                        <span class="text-[8px] md:text-[9px] font-black uppercase tracking-widest text-${color}-500">${plan.level}</span>
+                        <h3 class="text-xl md:text-2xl font-bold mt-2">${plan.name}</h3>
+                        <div class="mt-4 md:mt-6 flex flex-col">
+                            <div class="flex items-baseline gap-2 mb-1">
+                                <span class="text-gray-600 line-through text-xs">$${plan.old}</span>
+                                <span class="text-[7px] font-black px-2 py-1 bg-emerald-500/10 text-emerald-500 rounded uppercase tracking-tighter">Save 30%</span>
+                            </div>
+                            <div class="text-4xl md:text-5xl font-black text-white">$${plan.price}<span class="text-[10px] text-gray-500 ml-2 uppercase tracking-widest font-normal">/ Projeto</span></div>
+                        </div>
+                    </div>
+                    <div class="space-y-3 md:space-y-4 mb-8 md:mb-10 border-t border-white/5 pt-6 md:pt-8">
+                        ${plan.features.map(f => `<div class="flex items-center gap-3"><div class="w-1 h-1 bg-${color}-500 rounded-full"></div><span class="text-[9px] md:text-[10px] text-gray-400 font-bold uppercase tracking-widest">${f}</span></div>`).join('')}
+                    </div>
+                    <div class="mb-8 md:mb-10 space-y-3">
+                        <h4 class="text-[7px] md:text-[8px] text-gray-600 font-black uppercase tracking-[0.2em]">PACOTES PROMOCIONAIS</h4>
+                        ${plan.combos.map(c => `
+                            <div class="flex items-center justify-between p-4 bg-[#111111] rounded-2xl border border-white/[0.03]">
+                                <div class="flex flex-col">
+                                    <span class="text-[10px] font-bold text-white uppercase">${c.qty}</span>
+                                    <span class="text-[7px] font-black text-${color}-500 uppercase">OFFER</span>
+                                </div>
+                                <div class="text-xl md:text-2xl font-black text-emerald-500">$${c.price}</div>
+                            </div>`).join('')}
+                    </div>
+                    <button onclick="openContactModal()" class="btn-shine mt-auto w-full py-4 md:py-5 rounded-2xl ${plan.popular ? `bg-${color}-600 text-white` : 'bg-white text-black'} font-black text-[10px] uppercase tracking-widest active:scale-95 transition-all">RESERVAR</button>
+                </div>`).join('');
+        }
+
+        function switchPricing(type) {
+            ['shorts', 'long', 'thumbs'].forEach(t => { 
+                const btn = document.getElementById(`price-tab-${t}`);
+                btn.className = `px-6 md:px-10 py-3 md:py-4 rounded-full text-[9px] md:text-[10px] font-black uppercase tracking-widest transition-all text-gray-500 hover:text-white shrink-0`;
+            });
+            const activeColor = type === 'shorts' ? 'blue' : (type === 'long' ? 'rose' : 'purple');
+            document.getElementById(`price-tab-${type}`).className = `pricing-tab-active-${activeColor} px-6 md:px-10 py-3 md:py-4 rounded-full text-[9px] md:text-[10px] font-black uppercase tracking-widest transition-all shrink-0`;
+            renderPricing(type);
+        }
+
+        // Project Modal Fullscreen on Mobile
+        function openProjectModal(id) {
+            const p = projects.find(x => x.id === id);
+            const modal = document.getElementById('project-modal');
+            const content = document.getElementById('project-modal-content');
+            content.innerHTML = `
+                <button onclick="closeProjectModal()" class="fixed md:absolute top-4 md:top-8 right-4 md:right-8 z-50 p-3 bg-white/10 text-white rounded-full active:scale-75 transition-transform"><svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M6 18L18 6M6 6l12 12" /></svg></button>
+                <div class="w-full lg:flex-[1.2] bg-black flex items-center justify-center p-4 md:p-8 border-b md:border-b-0 md:border-r border-white/5"><img src="${p.imageUrl}" class="max-w-full max-h-[50vh] md:max-h-[80vh] object-contain rounded-2xl shadow-2xl"></div>
+                <div class="flex-1 p-6 md:p-12 lg:p-20">
+                    <h2 class="text-3xl md:text-4xl lg:text-5xl font-black mb-6 md:mb-8 text-glow-blue uppercase tracking-tighter">${p.title}</h2>
+                    <p class="text-gray-400 text-sm md:text-lg font-light leading-relaxed mb-8 md:mb-10">${p.description}</p>
+                    <div class="space-y-6">
+                        <div><h4 class="text-[10px] font-black text-rose-500 uppercase mb-4 tracking-widest">Performance</h4><div class="p-4 md:p-6 bg-white/[0.03] rounded-2xl border border-white/5 italic text-gray-200 text-xs md:text-sm">"${p.results}"</div></div>
+                        <div><h4 class="text-[10px] font-black text-gray-600 uppercase mb-4 tracking-widest">Stack</h4><div class="flex flex-wrap gap-2">${p.software.map(s => `<span class="px-3 py-1.5 bg-white/5 rounded-lg text-[10px] font-bold text-gray-500 border border-white/5">${s}</span>`).join('')}</div></div>
+                    </div>
+                    <button onclick="openContactModal(); closeProjectModal();" class="mt-12 w-full py-4 md:py-5 bg-gradient-to-r from-blue-600 to-rose-600 text-white font-black text-[10px] tracking-widest uppercase rounded-2xl active:scale-95 shadow-xl">QUERO ALGO ASSIM</button>
+                </div>`;
+            modal.classList.remove('hidden'); 
+            document.body.style.overflow = 'hidden';
+        }
+        
+        function closeProjectModal() { document.getElementById('project-modal').classList.add('hidden'); document.body.style.overflow = 'auto'; }
+        function openContactModal() { document.getElementById('contact-modal').classList.remove('hidden'); document.body.style.overflow = 'hidden'; }
+        function closeContactModal() { document.getElementById('contact-modal').classList.add('hidden'); document.body.style.overflow = 'auto'; }
+
+        // Chat
+        function toggleChat() { 
+            const chat = document.getElementById('ai-chat');
+            chat.classList.toggle('hidden'); 
+            chat.classList.toggle('flex'); 
+        }
+        
+        function sendMessage() {
+            const input = document.getElementById('chat-input');
+            const box = document.getElementById('chat-messages');
+            if(!input.value) return;
+            box.innerHTML += `<div class="flex justify-end"><div class="bg-blue-600 p-4 rounded-2xl rounded-br-none text-white">${input.value}</div></div>`;
+            const userText = input.value; input.value = '';
+            setTimeout(() => {
+                box.innerHTML += `<div class="flex justify-start"><div class="bg-white/5 p-4 rounded-2xl rounded-bl-none text-gray-300">Boa! O Enzo domina essas técnicas de retenção. Quer conferir os pacotes de YouTube ou Reels?</div></div>`;
+                box.scrollTop = box.scrollHeight;
+            }, 800);
+        }
+
+        // Init
+        window.onload = () => { renderPortfolio(); renderPricing('shorts'); };
+    </script>
 </body>
 </html>
